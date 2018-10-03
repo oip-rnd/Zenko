@@ -21,7 +21,7 @@ function emptyBucket(cb) {
 function expectedKeyList(startKey, endKey) {
     const expKeyList = [];
     for (let i = startKey; i <= endKey; i++) {
-        expKeyList.push(`key-${i}`);
+        expKeyList.push(`"key-${i}"`);
     }
     return expKeyList;
 }
