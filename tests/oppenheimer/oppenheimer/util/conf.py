@@ -1,12 +1,15 @@
-import yaml
-import sys
 import logging
 import os
 import os.path
+import sys
 from collections import namedtuple
-from ..error import NoConfigError, InvalidConfigError
 from datetime import datetime
 from pathlib import PosixPath
+
+import yaml
+
+from ..error import InvalidConfigError, NoConfigError
+from .mapping import createNamespace, recursivelyUpdateDict
 
 # Config path load hiearchy
 LOAD_ORDER = [
@@ -53,7 +56,7 @@ APP_DEFAULTS = {
     }
 }
 
-BUILT_IN_DEFAULTS.update(APP_DEFAULTS)
+BUILT_IN_DEFAULTS = recursivelyUpdateDict(BUILT_IN_DEFAULTS, APP_DEFAULTS)
 
 def parseLogLevel(text, default = 30):
     text = text.lower()
@@ -65,29 +68,6 @@ def parseLogLevel(text, default = 30):
                 debug = logging.DEBUG
                 )
     return levelValues.get(text, default)
-
-def recursivelyUpdateDict(orig, new):
-    updated = orig.copy()
-    updateFrom = new.copy()
-    for key, value in updated.items():
-        if key in new:
-            if not isinstance(value, dict):
-                updated[key] = updateFrom.pop(key)
-            else:
-                updated[key] = recursivelyUpdateDict(value, updateFrom.pop(key))
-    for key, value in updateFrom.items():
-        updated[key] = value
-    return updated
-
-def createNamespace(mapping, name = 'config'):
-    data = {}
-    for key, value in mapping.items():
-        if not isinstance(value, dict):
-            data[key] = value
-        else:
-            data[key] = createNamespace(value, key)
-    nt = namedtuple(name, list(data.keys()))
-    return nt(**data)
 
 def lookForFile(path):
     '''
