@@ -23,7 +23,7 @@ function expectedKeyList(startKey, endKey) {
     for (let i = startKey; i <= endKey; i++) {
         expKeyList.push(`key-${i}`);
     }
-    return expectedKeyList;
+    return expKeyList;
 }
 
 describe('Bucket GET V2 api', () => {
