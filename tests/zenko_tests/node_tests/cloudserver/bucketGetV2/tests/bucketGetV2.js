@@ -54,9 +54,9 @@ describe('Bucket GET V2 api', () => {
             const util = require('util');
             console.log(`\n\n------RES: \n${util.inspect(res, false, null)}\n\n`);
             res.Contents.forEach(object => keyList.push(object.Key));
-            assert.strictEqual(keyList, expectedKeyList(1, 10));
             console.log(`\n----RES KEYLIST: \n ${keyList}\n`);
             console.log(`\n-----EXPECTECTED KEYLIST: \n${expectedKeyList(1, 10)}\n`);
+            assert.strictEqual(keyList, expectedKeyList(1, 10));
             done();
         });
     });
