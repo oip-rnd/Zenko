@@ -23,6 +23,7 @@ function expectedKeyList(startKey, endKey) {
     for (let i = startKey; i <= endKey; i++) {
         expKeyList.push(`key-${i}`);
     }
+    return expectedKeyList;
 }
 
 describe('Bucket GET V2 api', () => {
@@ -49,8 +50,6 @@ describe('Bucket GET V2 api', () => {
     it('should list objects in V2 format', done => {
         s3.listObjectsV2({ Bucket: bucket }, (err, res) => {
             assert.ifError(err);
-            const util = require('util');
-            console.log(`\n\n------LIST RES::::::: \n ${util.inspect(res, false, null)}\n\n`);
             const keyList = [];
             res.Contents.forEach(object => keyList.push(object.Key));
             assert.strictEqual(keyList, expectedKeyList(1, 10));
