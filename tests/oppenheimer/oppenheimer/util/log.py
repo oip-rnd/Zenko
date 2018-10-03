@@ -1,4 +1,5 @@
 import logging
+import sys
 
 levels = dict(
         critical = logging.CRITICAL,
@@ -30,7 +31,7 @@ BASELOGGER = None
 def setupLogging(
         name,
         version,
-        level = logging.DEBUG,
+        loglvl = logging.DEBUG,
         logfile = None,
         log_rotation = False,
         logfmt = '%(asctime)s %(name)s %(levelname)s: %(message)s',
@@ -40,7 +41,7 @@ def setupLogging(
     ):
     # Create our root logger and set the log lvl
     rootLogger = logging.getLogger()
-    rootLogger.setLevel(level)
+    rootLogger.setLevel(loglvl)
 
     # Setup formatting
     # formatter = logging.Formatter(fmt=config.logging.logfmt, datefmt=config.logging.datefmt)
@@ -70,7 +71,7 @@ def setupLogging(
             handler.addFilter(Blacklist(*blacklist))
     baseLogger = rootLogger.getChild(name)
     baseLogger.info('Starting %s: version %s'%(name, version))
-    BASELOGGER = baseLogger
+    setattr(sys.modules[__name__], 'BASELOGGER', baseLogger)
     return baseLogger
 
 

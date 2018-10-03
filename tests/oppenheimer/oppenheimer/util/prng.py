@@ -1,7 +1,11 @@
 import random
 import os
+from .conf import config
 
 prng = random.Random()
 
-# Seed our prng with data from /dev/urandom
-prng.seed(os.urandom(8))
+# Seed our prng from config if present, otherwise use /dev/urandom
+if config.seed is not None:
+    prng.seed(config.seed)
+else:
+    prng.seed(os.urandom(16))

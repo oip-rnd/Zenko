@@ -21,7 +21,7 @@ class PickScenarioStage(Stage):
         self.logger.debug('%s scenario chosen for execution'%env.scenario.name)
         return env
 
-@register_stage
+# @register_stage
 class ResolveBucketStage(Stage):
     def Execute(self, env):
         for bucket in env.scenario.required.buckets:
