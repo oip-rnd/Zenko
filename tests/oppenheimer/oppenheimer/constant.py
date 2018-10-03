@@ -31,6 +31,8 @@ class Container:
     _MAP = {}
     @classmethod
     def to_constant(cls, i):
+        if isinstance(i, list):
+            return [cls._MAP.get(x) for x in i]
         return cls._MAP.get(i)
 
 

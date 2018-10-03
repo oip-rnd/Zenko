@@ -44,7 +44,7 @@ Groups test parameters together to form a unique combination of worload/config
 
 * required - Define requiremnts for this scenario
     * buckets - `int||list` Number of zenko buckets needed, pass a list to configure individual buckets
-        * replication - `bool` Enable replication on the buckets
+        * replication - `str` Enable replication on the buckets
         * transient - `bool` Enable transient source on buckets **This requires a bucket backed by s3-data, and will ignore `clouds` if set**
         * expiration - `duration` Enable lifecycle expiration on the buckets. **If present this key should contain a time duration eg: `5h 30m`
         * clouds - `list` Restrict this scenario to backends on the passed clouds

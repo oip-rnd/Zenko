@@ -9,7 +9,9 @@ from .. import register
 _log = Log('obj.scenario')
 
 Scenario = namedtuple('Scenario', ['name', 'required', 'tests', 'checks', 'kwargs'])
-Bucket = namedtuple('Bucket', ['replication', 'transient', 'expiration', 'clouds'], defaults=[False, False, False, []])
+Bucket = namedtuple('Bucket',
+                    ['replication', 'transient', 'expiration', 'versioning', 'clouds', 'client', 'backend', 'name'],
+                    defaults=[False, False, False, False, [], None, None, None])
 
 _REQUIRED_ARGS = ['name', 'required', 'tests', 'checks']
 
@@ -51,7 +53,15 @@ def load_buckets(buckets):
     if isinstance(buckets, int):
         return tuple(Bucket() for i in range(buckets))
     elif isinstance(buckets, list):
-        return tuple(Bucket(**b) for b in buckets)
+        ret = []
+        for b in buckets:
+            bconf = b.copy()
+            bconf['clouds'] = BackendType.to_constant(bconf['clouds'])
+            if isinstance(bconf['replication'], list):
+                bconf['replication'] = BackendType.to_constant(bconf['replication'])
+            ret.append(Bucket(**bconf))
+        return tuple(ret)
+        # return tuple(Bucket(**b) for b in buckets)
     else:
         raise error.InvalidScenarioFormatError()
 

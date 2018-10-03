@@ -1,9 +1,17 @@
+import uuid
+import warnings
+
 from boto3 import Session
 from botocore.handlers import set_list_objects_encoding_type_url
-from .constant import BackendType, REPLICATION_TMPL
-import uuid
-from .util.conf import config
 
+from .constant import REPLICATION_TMPL, BackendType, BUCKET_NAME_REGEX
+from .util.conf import config
+from .util.log import Log
+
+from pprint import pprint
+
+
+_log = Log('s3')
 
 def build_client_generic(backend, **kwargs):
     return Session(aws_access_key_id = backend.access_key,
@@ -42,19 +50,52 @@ def build_client(backend, **kwargs):
     return _TYPE_HANDLERS[backend.type](backend, **kwargs)
 
 
-static_role = 'arn:aws:iam::root:role/s3-replication-role'
-static_arn = 'arn:aws:s3:::zenko-bucket'
-def create_bucket(resource, name):
+
+def build_bucket(resource, name):
     if '"' in name:
         name = name.replace('"', '')
         warnings.warn('`"` found in bucket name! silently stripping')
-    if BUCKET_NAME_FORMAT.fullmatch(name) is None:
+    if BUCKET_NAME_REGEX.fullmatch(name) is None:
         raise RuntimeError('%s is an invalid bucket name!')
     return resource.Bucket(name)
 
+
+def create_bucket(bucket, backend):
+    try:
+        _log.debug('Creating bucket %s loc:%s'%(bucket.name, backend.name))
+        bucket.create(CreateBucketConfiguration=dict(LocationConstraint=backend.name))
+    except Exception as e:
+        _log.error('Error creating bucket %s'%(bucket.name))
+        _log.exception(e)
+        return False
+    return True
+
+def enable_versioning(bucket):
+    try:
+        bucket.Versioning().enable()
+        return True
+    except Exception as e:
+        _log.error('Error enabling versioning for bucket %s'%bucket.name)
+        _log.exception(e)
+        return False
+
+static_role = 'arn:aws:iam::root:role/s3-replication-role'
+static_arn = 'arn:aws:s3:::zenko-bucket'
 def setup_replication(bucket, *args, prefix = ''):
-    kwargs = dict(Bucket=bucket)
-    repl_config = dict(Role=static_role)
-    rules = [
-        dict(Status='Enabled', Prefix=prefix, Destination=dict(Bucket=static_arn, StorageClass=dest)) for dest in args
-    ]
+    try:
+        kwargs = dict(Bucket=bucket.name)
+        repl_config = dict(Role=static_role)
+        repl_config['Rules'] = [dict(
+                ID=uuid.uuid4().hex,
+                Status='Enabled',
+                Prefix=prefix,
+                Destination=dict(
+                    Bucket=static_arn,
+                    StorageClass=dest)) for dest in args]
+        kwargs['ReplicationConfiguration'] = repl_config
+        bucket.meta.client.put_bucket_replication(**kwargs)
+    except Exception as e:
+        _log.error('Failed to enable replication on bucket:%s backends:%s'%(bucket.name, ', '.join(args)))
+        _log.exception(e)
+        return False
+    return True
