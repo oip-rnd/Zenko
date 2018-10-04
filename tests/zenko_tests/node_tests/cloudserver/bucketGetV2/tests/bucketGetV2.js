@@ -51,11 +51,7 @@ describe('Bucket GET V2 api', () => {
         s3.listObjectsV2({ Bucket: bucket }, (err, res) => {
             assert.ifError(err);
             const keyList = [];
-            const util = require('util');
-            console.log(`\n\n------RES: \n${util.inspect(res, false, null)}\n\n`);
             res.Contents.forEach(object => keyList.push(object.Key));
-            console.log(`\n----RES KEYLIST: \n ${keyList}\n`);
-            console.log(`\n-----EXPECTECTED KEYLIST: \n${expectedKeyList(0, 9)}\n`);
             assert.deepStrictEqual(keyList, expectedKeyList(0, 9));
             done();
         });
@@ -75,8 +71,6 @@ describe('Bucket GET V2 api', () => {
     it('should include NextContinuationToken in truncated response', done => {
         s3.listObjectsV2({ Bucket: bucket, MaxKeys: 5 }, (err, res) => {
             assert.ifError(err);
-            const util = require('util');
-            console.log(`\n-----RES CONTINUATION TOKEN??\n${util.inspect(res, false, null)}\n`);
             assert(res.NextContinuationToken);
             done();
         });
@@ -99,16 +93,20 @@ describe('Bucket GET V2 api', () => {
 
     it('should ignore "startAfter" value if both "start-after" and ' +
     '"continuation-token" are included', done => {
+        const util = require('util');
         async.waterfall([
             next => s3.listObjectsV2({ Bucket: bucket, MaxKeys: 5 }, next),
-            (objList, next) => s3.listObjectsV2(
+            (objList, next) => {
+                console.log(`\n------LIST1::::;\n${util.inspect(objList, false, null)}\n`);
+                s3.listObjectsV2(
                 { Bucket: bucket, MaxKeys: 5,
                   StartAfter: 'key-7',
-                  ContinuationToken: objList.NextContinuationToken }, next),
+                  ContinuationToken: objList.NextContinuationToken }, next)},
         ], (err, objList2) => {
             assert.ifError(err);
             const keyList = [];
             objList2.Contents.forEach(object => keyList.push(object.key));
+            console.log(`\n------TSA & CT-----\n${util.inspect(objList2, false, null)}\n`);
             assert.deepStrictEqual(keyList, expectedKeyList(5,9));
             done();
         });
