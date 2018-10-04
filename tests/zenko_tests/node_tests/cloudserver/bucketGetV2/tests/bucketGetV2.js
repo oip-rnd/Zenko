@@ -55,8 +55,8 @@ describe('Bucket GET V2 api', () => {
             console.log(`\n\n------RES: \n${util.inspect(res, false, null)}\n\n`);
             res.Contents.forEach(object => keyList.push(object.Key));
             console.log(`\n----RES KEYLIST: \n ${keyList}\n`);
-            console.log(`\n-----EXPECTECTED KEYLIST: \n${expectedKeyList(1, 10)}\n`);
-            assert.strictEqual(keyList, expectedKeyList(0, 9));
+            console.log(`\n-----EXPECTECTED KEYLIST: \n${expectedKeyList(0, 9)}\n`);
+            assert.deepStrictEqual(keyList, expectedKeyList(0, 9));
             done();
         });
     });
@@ -67,7 +67,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             res.Contents.forEach(object => keyList.push(object.Key));
-            assert.strictEqual(keyList, expectedKeyList(8, 9));
+            assert.deepStrictEqual(keyList, expectedKeyList(8, 9));
             done();
         });
     });
@@ -75,6 +75,8 @@ describe('Bucket GET V2 api', () => {
     it('should include NextContinuationToken in truncated response', done => {
         s3.listObjectsV2({ Bucket: bucket, MaxKeys: 5 }, (err, res) => {
             assert.ifError(err);
+            const util = require('util');
+            console.log(`\n-----RES CONTINUATION TOKEN??\n${util.inspect(res, false, null)}\n`);
             assert(res.NextContinuationToken);
             done();
         });
@@ -90,7 +92,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             objList2.Contents.forEach(object => keyList.push(object.Key));
-            assert.strictEqual(keyList, expectedKeyList(5, 9));
+            assert.deepStrictEqual(keyList, expectedKeyList(5, 9));
             done();
         });
     });
@@ -107,7 +109,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             objList2.Contents.forEach(object => keyList.push(object.key));
-            assert.strictEqual(keyList, expectedKeyList(5,9));
+            assert.deepStrictEqual(keyList, expectedKeyList(5,9));
             done();
         });
     });
