@@ -56,7 +56,7 @@ describe('Bucket GET V2 api', () => {
             res.Contents.forEach(object => keyList.push(object.Key));
             console.log(`\n----RES KEYLIST: \n ${keyList}\n`);
             console.log(`\n-----EXPECTECTED KEYLIST: \n${expectedKeyList(1, 10)}\n`);
-            assert.strictEqual(keyList, expectedKeyList(1, 10));
+            assert.strictEqual(keyList, expectedKeyList(0, 9));
             done();
         });
     });
@@ -67,7 +67,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             res.Contents.forEach(object => keyList.push(object.Key));
-            assert.strictEqual(keyList, expectedKeyList(8, 10));
+            assert.strictEqual(keyList, expectedKeyList(8, 9));
             done();
         });
     });
@@ -90,7 +90,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             objList2.Contents.forEach(object => keyList.push(object.Key));
-            assert.strictEqual(keyList, expectedKeyList(6, 10));
+            assert.strictEqual(keyList, expectedKeyList(5, 9));
             done();
         });
     });
@@ -107,7 +107,7 @@ describe('Bucket GET V2 api', () => {
             assert.ifError(err);
             const keyList = [];
             objList2.Contents.forEach(object => keyList.push(object.key));
-            assert.strictEqual(keyList, expectedKeyList(6,10));
+            assert.strictEqual(keyList, expectedKeyList(5,9));
             done();
         });
     });
