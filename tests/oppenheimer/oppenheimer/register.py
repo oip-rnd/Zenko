@@ -1,45 +1,31 @@
 from collections import OrderedDict, namedtuple
 from itertools import chain
-from .util.mapping import recursivelyUpdateDict
+from .util.mapping import recursivelyUpdateDict, get_keys
 
 TESTS = OrderedDict()
 CHECKS = OrderedDict()
 
-class Operation:
-    _kwargs = []
+Operation = namedtuple('Operation', ['name', 'func', 'kwargs', 'conf'])
 
-    def __init__(self, name, func, required = [], **kwargs):
-        self.name = name
-        self.func = func
-        self._kwargs = required
-        self._default_kwargs = kwargs
+OP_CONF_KEYS = ['objects', 'retry']
 
-    @property
-    def kwargs(self):
-        return list(chain(self._kwargs, self._default_kwargs))
+def _extract_conf(kwargs):
+    return get_keys(kwargs, *OP_CONF_KEYS)
 
-    def set_kwargs(self, **kwargs):
-        self._passed_kwargs = kwargs
-
-    def __call__(self, bucket, objs):
-        kwargs = recursivelyUpdateDict(self._default_kwargs,
-                                        self._passed_kwargs)
-        return self.func(bucket, objs, **kwargs)
-
-
-
-def _register(resource_type, name, func, *args, **kwargs):
-    resource_type[name] = (func, args, kwargs)
+def _register(resource_type, name, func, **kwargs):
+    op_conf = _extract_conf(kwargs)
+    extra = {k: v for k, v in kwargs.items() if k not in op_conf}
+    resource_type[name] = Operation(name, func, extra, op_conf)
     return func
 
-def register_test(name, *args, **kwargs):
+def register_test(name, **kwargs):
     def inner(f):
-        return _register(TESTS, name, f, *args, **kwargs)
+        return _register(TESTS, name, f, **kwargs)
     return inner
 
-def register_check(name, *args, **kwargs):
+def register_check(name, **kwargs):
     def inner(f):
-        return _register(CHECKS, name, f, *args, **kwargs)
+        return _register(CHECKS, name, f, **kwargs)
     return inner
 
 def get_test(name):

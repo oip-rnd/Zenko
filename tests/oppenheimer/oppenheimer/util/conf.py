@@ -52,7 +52,7 @@ APP_DEFAULTS = {
         'secret_key': None
     },
     'logging': {
-        'blacklist': ['botocore', 'boto3.resources', 'urllib3']
+        'blacklist': ['botocore', 'boto3.resources', 'urllib3', 's3transfer']
     },
     'objects': {
         'default': {

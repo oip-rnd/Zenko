@@ -33,6 +33,19 @@ def createNamespace(obj, name = 'root'):
     return obj
 
 
+def _recursivelyUpdateDict(orig, new):
+    updated = orig.copy()
+    updatedFrom = new.copy()
+    for key, value in orig.items():
+        if key in new:
+            if isinstance(value, (list, dict)):
+                updated[key] = recursivelyUpdateDict(value, updatedFrom.pop(key))
+            else:
+                updated[key] = value
+    for key, value in updatedFrom.items():
+        updated[key] = value
+    return updated
+
 def recursivelyUpdateDict(orig, new):
     updated = orig.copy()
     updateFrom = new.copy()
@@ -44,4 +57,10 @@ def recursivelyUpdateDict(orig, new):
                 updated[key] = recursivelyUpdateDict(value, updateFrom.pop(key))
     for key, value in updateFrom.items():
         updated[key] = value
+    return updated
+
+def recursivelyUpdateDictList(*args):
+    updated = dict()
+    for dikt in args:
+        updated = recursivelyUpdateDict(updated, dikt)
     return updated

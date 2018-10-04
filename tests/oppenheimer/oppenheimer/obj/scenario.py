@@ -35,7 +35,7 @@ def load_scenario(data):
         kwargs = {}
         for key in filter(lambda k: k not in _REQUIRED_ARGS, data.keys()):
             _log.debug('Loading extra kwarg "%s"'%key)
-            kwargs[key] = createNamespace(data[key])
+            kwargs[key] = data[key]
         scenario = Scenario(**parsed, kwargs=kwargs)
         SCENARIOS[scenario.name] = scenario
     except error.RequiredKeyError as e:

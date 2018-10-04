@@ -7,7 +7,7 @@ from .obj.stage import Stage, SubStage
 from .obj.environment import Environment
 from .util.log import Log
 from .util.prng import prng
-from .util.mapping import get_keys
+from .util.mapping import get_keys, recursivelyUpdateDictList
 from .obj.scenario import Bucket
 from .obj.object import ObjectProxy
 from . import constant
@@ -123,12 +123,14 @@ class EnableExpirationStage(Stage):
 @register_stage
 class ResolveObjectStage(Stage):
     def Execute(self, env):
-        obj_conf = get_keys(env.scenario.kwargs, 'objects')
+        obj_conf_defaults = [get_keys(t.conf, 'objects') for t in env.scenario.tests]
+        obj_conf_scenario = get_keys(env.scenario.kwargs, 'objects')
+        obj_conf = recursivelyUpdateDictList(*obj_conf_defaults, obj_conf_scenario)
         print(obj_conf)
         for bucket in env.buckets:
             if obj_conf:
                 env.objects.append(ObjectProxy(env.zenko, bucket.name,
-                    **obj_conf['objects']._asdict()))
+                    **obj_conf['objects']))
             else:
                 env.objects.append(ObjectProxy())
         return env
@@ -139,7 +141,7 @@ class ExecuteTestsStage(SubStage):
     def Execute(self, env):
         for test in env.scenario.tests:
             test_env = Environment(
-                            test=test,
+                            op=test,
                             buckets=env.buckets,
                             objects=env.objects,
                             scenario=env.scenario
@@ -148,10 +150,12 @@ class ExecuteTestsStage(SubStage):
         return env
 
 @register_stage(pipeline='op')
-class BuildOperationStage(Stage):
+class ExecuteOpStage(Stage):
     def Execute(self, env):
-        func, args, kwargs = env.test
         for b, o in zip(env.buckets, env.objects):
-            ret = func(b, o, *args, **kwargs)
-        if not ret:
-            raise StopProcessingError('Test %s failed to complete!'%(func))
+            ret = env.op.func(b, o, **env.op.kwargs)
+            print(ret)
+            if not ret and env.op.conf.get('retry', False):
+                raise RetryError('Operation failed! Retrying %s'%(env.op.name))
+            elif not ret:
+                raise StopProcessingError('Operation %s failed to complete!'%(env.op.name))

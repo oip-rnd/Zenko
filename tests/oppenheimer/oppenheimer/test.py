@@ -20,9 +20,11 @@ def put_objects(bucket, objs):
 def get_objects(bucket, objs):
     pass
 
-@register_test('mpu')
+@register_test('mpu', objects=dict(size='100M'))
 def put_mpu(bucket, objs):
-    pass
+    for obj, data in objs:
+        obj.upload_fileobj(data)
+    return True
 
 @register_test('put-multibucket')
 def put_multibucket(bucket, objs):
