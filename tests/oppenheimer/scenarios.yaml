@@ -5,57 +5,58 @@ clouds:
   AZR: &AZR 3
   S3C: &S3C 4
   SPD: &SPD 5
+  ZNK: &ZNK 6
 
 scenarios:
-  - name: Simple Write
-    required:
-      buckets: 1
-    tests:
-      - put
-    checks:
-      - get
+  # - name: Simple Write
+  #   required:
+  #     buckets: 1
+  #   tests:
+  #     - put
+  #   checks:
+  #     - get
 
-  - name: Simple Read
-    required:
-      buckets: 1
-    tests:
-      - put
-    checks: []
+  # - name: Simple Read
+  #   required:
+  #     buckets: 1
+  #   tests:
+  #     - put
+  #   checks: []
 
-  - name: Write Replication
-    required:
-      buckets: 1
-    tests:
-      - put
-    checks:
-      - replication
+  # - name: Write Replication
+  #   required:
+  #     buckets: 1
+  #   tests:
+  #     - put
+  #   checks:
+  #     - replication
 
-  - name: PUT MPU
-    required:
-      buckets: 1
-    tests:
-      - mpu
-    checks:
-      - get
-    objects:
-      size:
-        min: 50M
-        max: 500M
-    clouds:
-      - *AWS
-      - *GCP
+  # - name: PUT MPU
+  #   required:
+  #     buckets: 1
+  #   tests:
+  #     - mpu
+  #   checks:
+  #     - get
+  #   objects:
+  #     size:
+  #       min: 50M
+  #       max: 500M
+  #   clouds:
+  #     - *AWS
+  #     - *GCP
 
   - name: 1-M replication
     required:
       buckets:
-        - replication: True
-          transient: True
-          clouds:
+        - replication:
             - *AWS
-        - replication: False
           clouds:
-            - *GCP
+            - *ZNK
+    objects:
+      size: 1B
+      count: 10
     tests:
-      - 'put-multibucket'
+      - 'put'
     checks:
       - 'get-multibucket'

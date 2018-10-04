@@ -53,6 +53,12 @@ APP_DEFAULTS = {
     },
     'logging': {
         'blacklist': ['botocore', 'boto3.resources', 'urllib3']
+    },
+    'objects': {
+        'default': {
+            'size': '0B',
+            'count': 1000
+        }
     }
 }
 

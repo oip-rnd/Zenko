@@ -12,7 +12,9 @@ from .register import register_test
 
 @register_test('put')
 def put_objects(bucket, objs):
-    pass
+    for obj, data in objs:
+        obj.upload_fileobj(data)
+    return True
 
 @register_test('get')
 def get_objects(bucket, objs):

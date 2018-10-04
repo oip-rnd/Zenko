@@ -3,9 +3,12 @@ from pipewrench import BaseFitting, PipeFitting
 from . import s3
 from .obj.environment import Environment
 
-ExecutionPipeline = BaseFitting()
-# ExecutionPipeline = PipeFitting()
+MainPipeline = BaseFitting()
+# MainPipeline = PipeFitting()
+
+OperationPipeline = BaseFitting()
+# OperationPipeline = PipeFitting()
 
 def Execute():
     env = Environment(zenko=s3.build_client_zenko())
-    ExecutionPipeline.Invoke(env)
+    MainPipeline.Invoke(env)

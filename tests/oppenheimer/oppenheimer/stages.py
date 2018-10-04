@@ -1,21 +1,31 @@
 import uuid
 
 from pipewrench.errors import RetryError, StopProcessingError
-
 from . import s3
-from .execute import ExecutionPipeline
-from .obj.stage import Stage
+from .execute import MainPipeline, OperationPipeline
+from .obj.stage import Stage, SubStage
+from .obj.environment import Environment
 from .util.log import Log
 from .util.prng import prng
+from .util.mapping import get_keys
 from .obj.scenario import Bucket
+from .obj.object import ObjectProxy
 from . import constant
 from pprint import pprint
 _log = Log('stages')
 
-def register_stage(stage):
-    ExecutionPipeline.Register(stage)
-    _log.debug('Registered stage %s'%stage.__name__)
-    return stage
+def register_stage(stage = None, pipeline = 'main'):
+    def inner(cls):
+        if pipeline == 'main':
+            MainPipeline.Register(cls)
+        elif pipeline == 'op':
+            OperationPipeline.Register(cls)
+        _log.debug('Registered stage %s to pipeline %s'%(cls.__name__, pipeline))
+        return cls
+    if stage is None:
+        return inner
+    else:
+        return inner(stage)
 
 
 # Picks the scenario to test
@@ -98,8 +108,50 @@ class EnableReplicationStage(Stage):
         for bucket in env.buckets:
             if bucket.replication is not None:
                 if bucket.backend.type == constant.BackendType.GCP or bucket.backend.type == constant.BackendType.AZR:
-                    raise StopProcessingError('GCP or Azure can not be replication sources do to not supporting versioning!')
+                    raise StopProcessingError('GCP or Azure can not be replication sources as they do to not supporting versioning!')
                 _log.debug('Enabling replication %s %s -> %s'%(bucket.name, bucket.backend.name, bucket.replication.name))
                 if not s3.setup_replication(bucket.client, bucket.replication.name):
                     raise StopProcessingError(
                         'Failed to enable replication %s %s -> %s'%(bucket.name, bucket.backend.name, bucket.replication.name))
+        return env
+
+# Enable Lifecycle expiration for buckets requiring it
+@register_stage
+class EnableExpirationStage(Stage):
+    pass
+
+@register_stage
+class ResolveObjectStage(Stage):
+    def Execute(self, env):
+        obj_conf = get_keys(env.scenario.kwargs, 'objects')
+        print(obj_conf)
+        for bucket in env.buckets:
+            if obj_conf:
+                env.objects.append(ObjectProxy(env.zenko, bucket.name,
+                    **obj_conf['objects']._asdict()))
+            else:
+                env.objects.append(ObjectProxy())
+        return env
+
+# Add a sub pipeline for operation execution
+@register_stage
+class ExecuteTestsStage(SubStage):
+    def Execute(self, env):
+        for test in env.scenario.tests:
+            test_env = Environment(
+                            test=test,
+                            buckets=env.buckets,
+                            objects=env.objects,
+                            scenario=env.scenario
+                        )
+            self.Route(test_env)
+        return env
+
+@register_stage(pipeline='op')
+class BuildOperationStage(Stage):
+    def Execute(self, env):
+        func, args, kwargs = env.test
+        for b, o in zip(env.buckets, env.objects):
+            ret = func(b, o, *args, **kwargs)
+        if not ret:
+            raise StopProcessingError('Test %s failed to complete!'%(func))

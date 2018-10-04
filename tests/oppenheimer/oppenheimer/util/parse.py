@@ -8,8 +8,3 @@ def parse_filesize(fs):
     suffix = fs[-1:]
     size = fs[:-1]
     return int(size) * FILESIZE_SUFFIXES[suffix]
-
-def get_keys(data, *args, error = False):
-    if error:
-        return {k: data[k] for k in args}
-    return {k: data.get(k) for k in args}

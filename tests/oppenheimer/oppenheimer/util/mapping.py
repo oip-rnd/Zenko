@@ -1,5 +1,9 @@
 from collections import namedtuple
 
+def get_keys(data, *args, error = False):
+    if error:
+        return {k: data[k] for k in args}
+    return {k: data.get(k) for k in args}
 
 def _createNamespaceList(lst, name = 'root'):
     data = []

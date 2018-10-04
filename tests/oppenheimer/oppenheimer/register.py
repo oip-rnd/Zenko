@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import chain
 from .util.mapping import recursivelyUpdateDict
 
