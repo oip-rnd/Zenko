@@ -93,11 +93,9 @@ describe('Bucket GET V2 api', () => {
 
     it('should ignore "startAfter" value if both "start-after" and ' +
     '"continuation-token" are included', done => {
-        const util = require('util');
         async.waterfall([
             next => s3.listObjectsV2({ Bucket: bucket, MaxKeys: 5 }, next),
             (objList, next) => {
-                console.log(`\n------LIST1::::;\n${util.inspect(objList, false, null)}\n`);
                 s3.listObjectsV2(
                 { Bucket: bucket, MaxKeys: 5,
                   StartAfter: 'key-7',
@@ -105,8 +103,7 @@ describe('Bucket GET V2 api', () => {
         ], (err, objList2) => {
             assert.ifError(err);
             const keyList = [];
-            objList2.Contents.forEach(object => keyList.push(object.key));
-            console.log(`\n------TSA & CT-----\n${util.inspect(objList2, false, null)}\n`);
+            objList2.Contents.forEach(object => keyList.push(object.Key));
             assert.deepStrictEqual(keyList, expectedKeyList(5,9));
             done();
         });
